@@ -16,6 +16,7 @@
     <packaging>pom</packaging>
     <modules>
         <module>redis</module>
+        <module>jvm</module>
     </modules>
 
 </project>
