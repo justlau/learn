@@ -40,3 +40,5 @@ JVM是按需动态加载，并且采用双亲委派的机制通过ClassLoader对
 
  整个双亲委派机制的流程便如上所诉，经历了自下而上的检查判断，再到自上而下的加载判断，最终实现class的加载。
 ````
+图例如下
+![Image text](https://raw.githubusercontent.com/justlau/resources/main/%E5%8F%8C%E4%BA%B2%E5%A7%94%E6%B4%BE.png?token=AHNOZJQS6Z6D4XLYYGHFKV3AGZTSC)
