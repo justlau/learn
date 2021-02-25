@@ -95,7 +95,7 @@ linking 分为三部分组成，分别是`verification -> preparation -> resolut
 ````
 ## 硬件层数据一致性问题
 ### 缓存一致性问题
-* 
+[文档](https://cnblogs.com/z00377750/p/9180644.html)
 ### 缓存行伪共享问题
 ````
 假设我们在主存中有两个值，int a = 10,int b = 20，假设有两个CPU，CPU1和CPU2，CPU1只需要读取a，CPU2只需要读取b
@@ -105,3 +105,93 @@ linking 分为三部分组成，分别是`verification -> preparation -> resolut
 据缓存一致性协议，需要通知其他CPU这个缓存行已经做出了修改，当CPU2收到缓存行改变的通知时，会重新到主存中加载这个缓存行，这时就出现了一个问题，CPU2
 只需要b的值，但是却因为无关数据的改变导致自己不停的从主存中更新数据，同理CPU1也会存在这种问题，这就叫缓存伪共享。
 ````
+### CPU指令乱序问题
+当一堆指令到达时，CPU为了提高指令的执行效率，会分析指令之间的依赖关系，若指令之间无依赖关系便可乱序执行这些指令
+````
+假设有这么三条指令 byte[] a = read(),int a = 10,int b = 20
+CPU在收到这三条指令时，先执行read()，也就是从内存中读取数据，而CPU执行指令的时间是比从内存读取时间快的，那么在等待期间，CPU便会分析后续指令是否
+与当前指令有依赖关系，若没有依赖关系，便在等待期间同时执行后续指令，若有依赖关系便等待当前指令结束。
+
+依赖关系是指：后一条指令的执行不依赖前一条指令的结果，上述三条指令便没有依赖关系，而如果到达的指令是这样的：int a = 10,int b = a，那么这两条指
+令之间是有依赖关系的，这样便只能等待第一条指令执行完毕时，才会执行第二条指令。
+````
+### 如果在硬件层面保证不乱序
+####硬件内存屏障，在X86架构下的CPU硬件屏障指令如下：
+````
+ sfence(写屏障store fence)：在sfence指令前的写操作，必须在sfence指令后的写操作前完成
+ lfence(读屏障load fence)：在lfence指令前的读操作当必须在lfence指令后的读操作前完成
+ mfence：在mfence指令前的读写操作当必须在mfence指令后的读写操作前完成
+
+````
+####JVM对于内存屏障的规范
+JVM的内存屏障是依赖于硬件的实现，它只是定义了一个规范
+````
+ LoadLoad：
+    对于这样的语句 Load1;LoadLoad;Load2
+    在Load2及后续读取操作执行前，要保证Load1的指令执行完毕
+ StoreStore：
+    对于这样的语句 Store1;StoreStore;Store2
+    在Store2及后续写入操作执行前，要保证Store1执行完且要对其他CPU可见
+ LoadStore：
+    对于这样的语句 Load1;LoadStore;Store1
+    在Store1及后续操作执行前，要保证Load1要读取的数据被读取完毕
+ StoreLoad：
+    对于这样的语句 Store1;StoreLoad;Load1
+    在Load1及后续操作执行前，保证Store1的指令执行完且要对其他CPU可见
+````
+####volatile的实现细节
+
+* 字节码层面
+````
+public class T {
+
+    volatile int m = 8;
+}
+
+通过IDE自带的jclasslib查看字节码文件发现只是在flag上增加了一个ACC_VOLATILE的标识
+````
+* JVM的实现
+````
+在volatile的读写都增加屏障
+
+StoreStoreBarrier
+volatile写操作
+StoreLoadBarrier
+----------------------------
+LoadLoadBarrier
+volatile读操作
+LoadStoreBarrier
+
+````
+##对象在内存中的布局
+### 对象的创建过程
+
+* 将class文件从磁盘加载到内存
+* class linking，也就是校验 -> 静态成员属性赋默认值 -> 解析
+* class初始化，给静态成员属性赋初始值
+* 申请对象所需内存
+* 普通成员属性赋默认值
+* 调用构造方法，字节码层面是<init>
+    * 给普通成员属性按顺序赋初始值
+    * 执行构造方法代码块
+        * 执行super的构造方法，进行super的初始化(如果构造方法里没有显示调用父类的构造方法，那么就会隐式调用父类的无参构造)
+        * 执行构造方法代码块
+### 对象在内存中的布局
+在JVM里，对象在内存中分为三部分
+* 对象头，而对象头又分为以下几部分
+    * markword 占用8个字节，主要存储对象的hashCode(如果调用了hashCode方法)、GC分代年龄、锁状态标志等信息
+    * classpoint 对象指向class的指针，代表当前的实例对象属于哪一个类，在开启-XX:+UseCompressedClassPointers时为4字节，不开启占8字节
+    * arraylength 若对象为数组，则还需要记录数组的长度，若为普通对象就没有此项，占用4字节
+* 实例数据
+    * 主要记录对象成员属性的大小
+        * byte------>1字节
+        * char------>2字节
+        * short----->2字节
+        * int->------>4字节
+        * float------>4字节
+        * long------>8字节
+        * double--->8字节
+        * boolean-->至少1字节
+    * 若成员属性为引用类型，开启-XX:+UseCompressedOops时为4字节，不开启为8字节
+* 对齐填充
+    * 若对象大小所占字节数不满足8的倍数，那么就会自动补齐
