@@ -184,14 +184,14 @@ LoadStoreBarrier
     * arraylength 若对象为数组，则还需要记录数组的长度，若为普通对象就没有此项，占用4字节
 * 实例数据
     * 主要记录对象成员属性的大小
-        * byte------>1字节
-        * char------>2字节
-        * short----->2字节
-        * int->------>4字节
-        * float------>4字节
-        * long------>8字节
-        * double--->8字节
-        * boolean-->至少1字节
+        * byte      1字节
+        * char      2字节
+        * short     2字节
+        * int       4字节
+        * float     4字节
+        * long      8字节
+        * double    字节
+        * boolean   至少1字节
     * 若成员属性为引用类型，开启-XX:+UseCompressedOops时为4字节，不开启为8字节
 * 对齐填充
     * 若对象大小所占字节数不满足8的倍数，那么就会自动补齐
