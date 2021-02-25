@@ -45,7 +45,8 @@ JVM是按需动态加载，并且采用双亲委派的机制通过ClassLoader对
  如果找到便返回，如果找不到便继续询问上一级，当到达顶层时，判断是否存在，并且尝试加载，如果属于自己便加载，如果不属于便逐层退出。
 ````
 图例如下
-![Image text](https://raw.githubusercontent.com/justlau/resources/main/%E5%8F%8C%E4%BA%B2%E5%A7%94%E6%B4%BE.png?token=AHNOZJQS6Z6D4XLYYGHFKV3AGZTSC)
+
+![Image text](https://raw.githubusercontent.com/justlau/resources/main/%E5%8F%8C%E4%BA%B2%E5%A7%94%E6%B4%BE.png?token=AHNOZJTB5PF5K7JVRA6W4KDAG4TNK)
 
 在class加载过程中为什么会使用双亲委派这种机制呢？
 
