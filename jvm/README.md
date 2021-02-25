@@ -57,4 +57,39 @@ JVM是按需动态加载，并且采用双亲委派的机制通过ClassLoader对
     * 从容量角度：如果需要被加载的class已经被其他ClassLoader加载了，那么就无需继续加载，直接使用即可。
 如何打破双亲委派？
 
-    * 
+    * 由 ClassLoader 的源码可知，双亲委派机制是由 loadClass(String name) 方法定义好了，如果想自定义 ClassLoader 只需要继承 ClassLoader
+      并重写 findClass(String name) 方法即可，而如果想要打破双亲委派机制，只需要重写 loadClass(String name) 即可。
+何时打破双亲委派机制
+
+    * 在jdk1.2之前，自定义 ClassLoader 都必须要重写 loadClass(String name) 方法，这时就可以打破此机制，这是当时JDK的一个缺陷。
+    * 可以在通过 java.lang.Thread#setContextClassLoader 方法来设置某个线程的ClassLoader，比如说项目的启动线程，这时就可以将
+      自定义ClassLoader用作项目使用，随便加载任何类到项目中。
+    * tomcat的热部署就要求各模块使用指定的ClassLoader，例如：修改了某个jsp文件，tomcat是如何做到不需要重部署便可更新jsp？其实它是将
+      修改前加载jsp模块的那个ClassLoader置为空，重新创建一个ClassLoader，通过打破双亲委派机制，重新将此模块下的文件加载了
+      一次，便可达到热部署的效果。
+### linking
+linking 分为三部分组成，分别是`verification -> preparation -> resolution`
+#### verification
+验证加载进来的文件是否符合JVM规定
+#### preparation
+给静态成员变量赋`默认值`，比如说int类型的就赋值为0，Integer类型的就赋值为null
+#### resolution
+* 将类、方法、属性等符号引用解析为直接引用
+* 常量池的各种符号引用解析为指针、偏移量等内存地址的直接引用
+### initializing
+调用类的初始化方法给静态成员变量赋`初始值`
+````
+    假设我们有这样一个类
+    public class T {
+        private int m = 8;
+    }
+
+
+    那么当我们执行 T t = new T()时，通过IDE自带的jclasslib插件可以看到有如下几条指令：
+   
+    0 new #3 <org/learn/T>                  //申请内存
+    3 dup
+    4 invokespecial #4 <org/learn/T.<init>> //调用构造方法，并且把m赋值为8
+    7 astore_1                              //将new出来T的引用赋值给t
+    8 return
+````
