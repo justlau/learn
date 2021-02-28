@@ -46,7 +46,7 @@ JVM是按需动态加载，并且采用双亲委派的机制通过ClassLoader对
 ````
 图例如下
 
-![Image text](https://raw.githubusercontent.com/justlau/resources/main/%E5%8F%8C%E4%BA%B2%E5%A7%94%E6%B4%BE.png?token=AHNOZJTB5PF5K7JVRA6W4KDAG4TNK)
+![Image text](https://raw.githubusercontent.com/justlau/resources/main/%E5%8F%8C%E4%BA%B2%E5%A7%94%E6%B4%BE.png)
 
 在class加载过程中为什么会使用双亲委派这种机制呢？
 
@@ -334,7 +334,7 @@ main方法
             * CMS 6
             * G1 15
     * 动态年龄
-        * 当垃圾回收时，从eden+s1(或s2)拷贝到s2(或s1)区的数量超过了s1或s2的50%时，会将年龄最大的放入老年代
+        * 当垃圾回收时，从eden+s1(或s2)拷贝到s2(或s1)区的对象按照年龄从小到大的顺序进行累加，当累加和超过了s1或s2的50%时，会将年龄最大的放入老年代
 
 #### 一个对象从出生到消亡的过程
 * 栈上分配

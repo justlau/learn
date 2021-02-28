@@ -12,7 +12,7 @@ redis要记住的特点就是：快，单线程
 ### redis为什么单线程还会这么快？
 redis采用了非阻塞的I/O多路复用技术，保证redis在多连接时系统的吞吐量。
 
-![Image text](https://raw.githubusercontent.com/BinLiuA/resources/main/redis%E5%A4%9A%E8%B7%AF%E5%A4%8D%E7%94%A8.png)
+![Image text](https://raw.githubusercontent.com/justlau/resources/main/redis%E5%A4%9A%E8%B7%AF%E5%A4%8D%E7%94%A8.png)
 假设有三个redis实例连接了redis server
 ````
 任何进程在linux系统中都有IO对应的一个文件描述符fd(file discriptor),三个redis client 在连接上redis server时都会有对应的文件描述符
